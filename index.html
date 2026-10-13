@@ -47,7 +47,7 @@ async function getDb(){
  var fs=F.initializeFirestore(A.initializeApp(FB),{experimentalAutoDetectLongPolling:true});
  return {collection:function(c){return {
   doc:function(id){return {set:function(o){return F.setDoc(F.doc(fs,c,id),o)}}},
-  onSnapshot:function(ok,er){return F.onSnapshot(F.collection(fs,c),function(sn){ok({docs:sn.docs.map(function(d){return{id:d.id,data:function(){return d.data()}}})})},er)}}}}};
+  onSnapshot:function(ok,er){return F.onSnapshot(F.collection(fs,c),function(sn){ok({docs:sn.docs.map(function(d){return{id:d.id,data:function(){return d.data()}}})})},er)}}}};
 }
 </script>
 <script>
