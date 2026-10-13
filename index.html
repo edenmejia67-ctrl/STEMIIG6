@@ -35,16 +35,16 @@ h2{font-size:16px;margin:22px 0 8px;padding-bottom:4px;border-bottom:2px solid v
 <script>
 // PASTE YOUR FIREBASE CONFIG HERE (see README step 3). Leave apiKey empty to run in this-device-only mode.
 var FB={
-apiKey:"AIzaSyBF4SRtHEa5kup7qDXvjDleot9t7MlkCk",
-authDomain:"researchparts.firebaseapp.com",
-projectId:"researchparts",
-appId:"1:1004048059916:web:9056e75eb2a9d52f2b2829"
+ apiKey:"AIzaSyBF4SRtHEa5kup7qDXvjDleotn9t7MlkCk",
+ authDomain:"researchparts.firebaseapp.com",
+ projectId:"researchparts",
+ appId:"1:1004048059916:web:9056e75eb2a9d52f2b2829"
 };
 async function getDb(){
  if(!FB.apiKey)return null;
  var A=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
  var F=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
- var fs=F.getFirestore(A.initializeApp(FB));
+ var fs=F.initializeFirestore(A.initializeApp(FB),{experimentalAutoDetectLongPolling:true});
  return {collection:function(c){return {
   doc:function(id){return {set:function(o){return F.setDoc(F.doc(fs,c,id),o)}}},
   onSnapshot:function(ok,er){return F.onSnapshot(F.collection(fs,c),function(sn){ok({docs:sn.docs.map(function(d){return{id:d.id,data:function(){return d.data()}}})})},er)}}}}};
@@ -106,7 +106,7 @@ function lsave(){try{localStorage.setItem("tc2",JSON.stringify(S))}catch(e){}}
 function esc(x){return String(x||"").replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function save(id,o){
  S[id]=o;lsave();draw();
- if(db){db.collection("tasks").doc(id).set(o).catch(function(){document.getElementById("sync").textContent="Could not save to the shared list. Check the Firebase rules (see README)."})}
+ if(db){db.collection("tasks").doc(id).set(o).catch(function(e){document.getElementById("sync").textContent="Save failed: "+(e.code||e.message)})}
 }
 function chips(){var c=document.getElementById("chips"),h="";["ALL","EL","JJ","JP","KT","MT"].forEach(function(p){h+='<button class="chip'+(f==p?" on":"")+'" data-p="'+p+'">'+(p=="ALL"?"Everyone":p)+"</button>"});c.innerHTML=h}
 function draw(){
@@ -132,13 +132,14 @@ document.addEventListener("change",function(e){
 });
 chips();draw();
 (async function(){
- try{db=await getDb()}catch(e){db=null}
  var sy=document.getElementById("sync");
- if(!db){sy.textContent="Not connected to Firebase yet: ticks are saved on this device only (see README).";return}
- sy.textContent="Live: shared with the team";
+ try{db=await getDb()}catch(e){db=null;console.error(e);sy.textContent="Firebase failed to load: "+(e.code||e.message);return}
+ if(!db){sy.textContent="Not connected: the apiKey is empty.";return}
+ sy.textContent="Connecting...";
  db.collection("tasks").onSnapshot(function(snap){
+  sy.textContent="Live: shared with the team";
   var a=document.activeElement;if(a&&a.getAttribute&&a.getAttribute("data-n"))return;
   var m={};snap.docs.forEach(function(x){m[x.id]=x.data()});S=m;lsave();draw();
- },function(){sy.textContent="Live sync problem. Reload the page."});
+ },function(e){console.error(e);sy.textContent="Sync error: "+(e.code||e.message)});
 })();
 </script></main></body></html>
