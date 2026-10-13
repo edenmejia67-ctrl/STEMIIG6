@@ -34,7 +34,12 @@ h2{font-size:16px;margin:22px 0 8px;padding-bottom:4px;border-bottom:2px solid v
 <div id="list"></div>
 <script>
 // PASTE YOUR FIREBASE CONFIG HERE (see README step 3). Leave apiKey empty to run in this-device-only mode.
-var FB={apiKey:"",authDomain:"",projectId:"",appId:""};
+var FB={
+apiKey:"AIzaSyBF4SRtHEa5kup7qDXvjDleot9t7MlkCk",
+authDomain:"researchparts.firebaseapp.com",
+projectId:"researchparts",
+appId:"1:1004048059916:web:9056e75eb2a9d52f2b2829"
+};
 async function getDb(){
  if(!FB.apiKey)return null;
  var A=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
