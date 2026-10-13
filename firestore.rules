@@ -1,0 +1,11 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Only the "tasks" collection, small documents only. Anyone with the link can read/write it.
+    match /tasks/{id} {
+      allow read: if true;
+      allow write: if request.resource.data.keys().hasOnly(['done','by','at','note'])
+                   && request.resource.data.note.size() < 500;
+    }
+  }
+}

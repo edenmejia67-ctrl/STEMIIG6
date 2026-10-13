@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Paper Fix Checklist – Who Does What</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f6f5f0;--card:#fff;--tx:#1d2a1f;--mut:#667;--bd:#d9d6c8;--ac:#2f6b3a;--warn:#b3361f;--hl:#eef5ec}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141a15;--card:#1e271f;--tx:#e8eee8;--mut:#9aa89b;--bd:#344036;--ac:#6cc27b;--warn:#ff8a73;--hl:#243026}}
+:root[data-theme="dark"]{--bg:#141a15;--card:#1e271f;--tx:#e8eee8;--mut:#9aa89b;--bd:#344036;--ac:#6cc27b;--warn:#ff8a73;--hl:#243026}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:860px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:4px 0}
+.sub{color:var(--mut);margin:0 0 12px}
+.bar{height:8px;background:var(--bd);border-radius:5px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ac);width:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding:6px 0;z-index:2}
+.chip{border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:16px;padding:5px 12px;cursor:pointer;font-size:13px}
+.chip.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+h2{font-size:16px;margin:22px 0 8px;padding-bottom:4px;border-bottom:2px solid var(--ac)}
+.t{background:var(--card);border:1px solid var(--bd);border-radius:10px;margin:8px 0;padding:10px 12px}
+.t.done{opacity:.55}
+.top{display:flex;gap:10px;align-items:flex-start}
+.top input{margin-top:4px;width:18px;height:18px;flex:none}
+.who{font-size:11px;font-weight:700;background:var(--ac);color:#fff;border-radius:4px;padding:1px 6px;margin-right:6px}
+.must{color:var(--warn);font-size:11px;font-weight:700;margin-left:6px}
+.sec{font-weight:600}.pg{color:var(--mut);font-size:12px}
+.row{margin:6px 0 0 28px;font-size:14px}
+.row b{display:inline-block;min-width:52px;color:var(--mut);font-weight:600}
+.find{background:var(--hl);padding:1px 4px;border-radius:3px}
+.note{margin:6px 0 0 28px;width:calc(100% - 28px);box-sizing:border-box;border:1px solid var(--bd);border-radius:6px;padding:5px 8px;background:var(--bg);color:var(--tx);font:inherit;font-size:13px}.by{color:var(--ac);font-size:12px;margin-left:28px}select{font:inherit;padding:2px 6px}</style></head><body><main>
+<h1>Paper Fix Checklist – Live Team Tracker</h1>
+<p class="sub">Tasks are in the order the team should do them. Tick a task and everyone sees it live, with who did it and a note. Page numbers refer to _CHAPTER-1-AND-2_G6Final.pdf.</p>
+<div class="bar"><i id="pb"></i></div><p class="sub" id="pt"></p>
+<p class="sub">I am: <select id="me"><option value="">pick your initials</option><option>EL</option><option>JJ</option><option>JP</option><option>KT</option><option>MT</option></select> <span id="sync"></span></p><div class="chips" id="chips"></div>
+<div id="list"></div>
+<script>
+// PASTE YOUR FIREBASE CONFIG HERE (see README step 3). Leave apiKey empty to run in this-device-only mode.
+var FB={apiKey:"",authDomain:"",projectId:"",appId:""};
+async function getDb(){
+ if(!FB.apiKey)return null;
+ var A=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+ var F=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+ var fs=F.getFirestore(A.initializeApp(FB));
+ return {collection:function(c){return {
+  doc:function(id){return {set:function(o){return F.setDoc(F.doc(fs,c,id),o)}}},
+  onSnapshot:function(ok,er){return F.onSnapshot(F.collection(fs,c),function(sn){ok({docs:sn.docs.map(function(d){return{id:d.id,data:function(){return d.data()}}})})},er)}}}}};
+}
+</script>
+<script>
+// [id, who, phase, section, page, must, find, change, why]
+var T=[
+["d1","ALL",0,"Decision: what is X (accuracy)?","—",1,"Pearson section just says “scores for Soil Buddy accuracy”.","X = each gardener's average perceived-accuracy score (Part II). Measured % error vs reference is reported separately.","Gives 30 X–Y pairs. Without this, Pearson r can't be computed."],
+["d2","ALL",0,"Decision: Likert scale","—",1,"Table lists 1 = Strongly Agree … 5 = Strongly Disagree, but interpretation says 4.21–5.00 = Very High.","5 = Strongly Agree … 1 = Strongly Disagree everywhere.","Reversed scale makes agreeing gardeners read as “Very Low”."],
+["d3","ALL",0,"Decision: growth indicator 3.4","—",1,"SOP says “Number of leaves”; Scope says “new shoots”; Framework/Ch.2 say “biomass”.","Use “number of new shoots” everywhere (it's counted, no scale needed).","One indicator, one name, or the panel will catch the contradiction."],
+["d4","ALL",0,"Decision: observation period","—",1,"Never stated.","[__] weeks, measured every [__] days. Growth rate = (final − initial) ÷ number of weeks.","“Growth rate” needs a time base and a formula."],
+["k1","KT",1,"Statement of the Problem – title","2",1,"“Factors Affecting Plant Growth Rate Among Gardeners on Soil Buddy's Accuracy”","Use the official title: “The Relationship Between Soil Buddy Accuracy and Plant Growth Rate Among Gardeners in Dapdap, Bamban, Tarlac”","Intro title doesn't match the study title used on other pages."],
+["k2","KT",1,"SOP 1.4 and 1.5","2",1,"1.4 Soil Buddy use; and / 1.5 Frequency of Soil Buddy usage","1.4 Soil monitoring method used; and / 1.5 Frequency of checking the soil","Gardeners without the device can answer; matches the new questionnaire."],
+["k3","KT",1,"SOP 2 wording","2",1,"“Soil buddy” / “Soil Ph” / “Consistency and readings”","“Soil Buddy” / “Soil pH” / “Consistency of readings”","Typos and capitalization."],
+["k4","KT",1,"SOP 3.4","2",1,"3.4 Number of leaves (repeated)","3.4 Number of new shoots","Duplicate of 3.2."],
+["k5","KT",1,"Research Hypothesis","3",0,"“There is no significant relationship between Soil Buddy's accuracy and the plant growth rate…”","Add “perceived” and the level: “…at the 0.05 level of significance.”","Matches X definition and the Pearson section."],
+["k6","KT",1,"SOP – advantages/disadvantages","2–4",1,"Significance and Scope promise “advantages and disadvantages”, but no SOP asks it.","Either add SOP 5 “What are the advantages and disadvantages of Soil Buddy?” (+ open-ended question) or delete the mentions in Significance and Scope.","Promise with no question to answer it."],
+["e1","EL",2,"Background – paragraph 3","1",1,"“Dapdap, [town], Tarlac”","“Dapdap, Bamban, Tarlac”","Placeholder left in."],
+["e2","EL",2,"Background – citations and gap","1",1,"Paragraphs 1–2 have no citations.","Add in-text citations (Schattman et al., 2023; Majsztrik et al., 2012; Samaniego & Gallego, 2024; Bramley & Ouzman, 2019). Add one gap sentence: “Few local studies link gardeners' view of sensor accuracy to measured plant growth.”","Panels expect cited claims and a stated gap."],
+["e3","EL",2,"Background – paragraph 2","1",0,"“Unlike traditional methods that rely on manual observation…”","Add that many gardeners still rely on feel/appearance, strips or thermometers, then lead into Soil Buddy.","Connects to new 1.4 (monitoring method used)."],
+["e4","EL",2,"Page footer (all pages)","1–21",1,"“Parents' Educational Attainment and Political Awareness”","Replace with the study's short title.","Left over from the example paper."],
+["p1","JP",2,"Significance – Gardeners","3",0,"“…and the advantages and disadvantages of using Soil Buddy for soil moisture monitoring.”","Keep only if SOP 5 is added (KT, task k6); otherwise delete this phrase.","Must match the SOP."],
+["p2","JP",2,"Significance – Horticulturists / Community","3–4",0,"“accuracy of the Soil Buddy as a soil moisture monitoring device” / “promoting the use of an affordable and accessible…”","Say it measures moisture, pH and temperature; soften “affordable” to “may be an affordable” unless cost is shown.","Unsupported claim; device does more than moisture."],
+["j1","JJ",3,"Scope – paragraph 1","4",1,"“Soil Buddy use, and frequency of using Soil Buddy”","“soil monitoring method used and frequency of checking the soil”","Match SOP 1.4/1.5."],
+["j2","JJ",3,"Scope – paragraph 3","4",1,"“tested under controlled conditions”","“tested under actual gardening conditions”","Research Locale says actual conditions. Contradiction."],
+["j3","JJ",3,"Scope – “soil moisture sensor”","4",0,"“as a soil moisture sensor”","“as a soil monitoring device (moisture, pH, temperature)”","Device measures three things."],
+["j4","JJ",3,"Scope – last sentence","5",0,"“…beyond the scope of the study” (no period)","Add the period. Add one sentence stating the observation period from d4.","Typo; observation period belongs in the delimitation."],
+["e5","EL",3,"Scope – statistics sentence","4",0,"“…and Pearson r; no Chi-square test will be used.”","Keep. Make sure Framework (task m2) removes Chi-square too.","Scope and Framework must agree."],
+["m1","MT",3,"Definition of Terms (missing)","after 5",1,"No Definition of Terms section exists in the PDF.","Add, after Scope: Soil Buddy, perceived accuracy, soil moisture, soil pH, soil temperature, consistency of readings, plant growth rate, plant height, number of leaves, stem diameter, number of new shoots, gardener (Plantito/Plantita). Define each as used in this study.","Required in most PR2 chapters; also fixes the “accuracy” ambiguity."],
+["m2","MT",3,"Conceptual Framework (unassigned – suggested MT)","5–7",1,"“…and biomass.” / “Chi-square Test of Independence” (paragraph AND Figure 1 box)","“…and number of new shoots.” / “Pearson Product-Moment Correlation Coefficient”. Fix the figure's last Input item (“Biomass”). Change Input to monitoring method used / frequency of checking the soil. Add a Process step: validation of Soil Buddy against reference instrument.","Three contradictions with Scope and Chapter 2."],
+["e6","EL",4,"Research Design – descriptive paragraph","8",1,"“Soil Buddy use, and frequency of Soil Buddy usage” … “stem diameter, and biomass”","“soil monitoring method used and frequency of checking the soil” … “number of new shoots”","SOP and d3."],
+["pj1","JP",4,"Research Locale – paragraph 2","8",1,"“…stem diameter, and biomass.”","“…stem diameter, and number of new shoots.” Add: gardeners use or observe Soil Buddy during the observation period.","Gardeners can't rate a device they never used."],
+["pj2","JP",4,"Population and Respondents","9",1,"“use of Soil Buddy” (twice)","“soil monitoring practices” and “perceived accuracy of Soil Buddy”. Add inclusion criterion: “willing to use or observe Soil Buddy during the observation period.”","Matches new 1.4 and the study design."],
+["pj3","JP",4,"Sample Size","10",1,"“…stem diameter, and biomass.”","“…stem diameter, and number of new shoots.” Add where the pilot group comes from (e.g. gardeners in a nearby barangay).","30 respondents in one barangay leaves no one for the pilot."],
+["k7","KT",5,"Questionnaire description – Part 1","11",1,"“…Soil Buddy use, and frequency of Soil Buddy usage.”","“…soil monitoring method used, and frequency of checking the soil.”","SOP 1.4/1.5."],
+["k8","KT",5,"Questionnaire – scale table","11",1,"Blank 5 4 3 2 1 table","Fill with Strongly Agree (5) … Strongly Disagree (1). Write Part II items as statements.","Agree scales need statements."],
+["k9","KT",5,"Plant Growth Observation Sheet","12",1,"“biomass using a weighing scale” (and again in Data Gathering)","“number of new shoots by actual counting”. Add measuring days and weeks from d4.","Shoots are counted, not weighed."],
+["k10","KT",5,"Soil Buddy Monitoring Record Sheet","12",1,"Records only Soil Buddy readings.","Add a column for the reference instrument reading, absolute error and % error. List a Validation Record Sheet as a third instrument if you keep a validation section.","Measured accuracy can't be computed without a reference."],
+["k11","KT",5,"Validity and Reliability – functional testing","13",0,"“The Soil Buddy prototype will also undergo functional testing…”","Merge with the validation/calibration step or keep one version only. Say how accuracy is judged (e.g. within ±[__]%).","Duplicate procedures; no accuracy cut-off."],
+["k12","KT",5,"Replace the questionnaire in the appendix","—",1,"Old version uses 4-point scale and Soil Buddy use/frequency.","Use the new Parts I and II only: 5-point agree scale, new 1.4/1.5. Drop Part III (growth is measured by you).","Must match Chapter 2."],
+["t1","MT",6,"Preparation and Coordination","14",0,"Materials list.","Add reference instruments (moisture meter, pH kit, thermometer), ruler, caliper, tally sheet.","Needed for validation and growth measures."],
+["t2","MT",6,"Actual Data Collection","15",1,"“biomass will be measured using a weighing scale”","“number of new shoots will be counted”. Add: measured every [__] days for [__] weeks; gardeners use Soil Buddy during this time; reference reading taken beside each Soil Buddy reading.","Observation period and pairing were missing."],
+["t3","MT",6,"Administration of the Questionnaire","16",0,"When to answer.","State that the questionnaire is answered at the end of the observation period.","Perceptions need exposure to the device first."],
+["t4","MT",6,"Data Retrieval and Organization","16",0,"“Soil Buddy readings, and plant growth measurements”","Add: compute each gardener's average perceived accuracy (X) and average plant growth (Y) before analysis.","Unit of analysis was undefined."],
+["e7","EL",7,"Statistical Treatment – Frequency and %","17",1,"“Soil Buddy use, and frequency of Soil Buddy usage”","“monitoring method used, and frequency of checking the soil.” Add: 1.4 allows several answers, so percentages are of N for each method and may exceed 100%.","Check-all answers won't total 100%."],
+["e8","EL",7,"Statistical Treatment – Weighted Mean","17–18",1,"Scale table 5/4/3/2/1 with Very High…Very Low.","Rename the descriptors to match the items (e.g. Very Accurate…Not Accurate). Add: indicator means are averaged into one score per gardener. Add an interpretation scale for growth results or report them as measured values.","Growth results had no way of being interpreted."],
+["j5","JJ",7,"Statistical Treatment – Standard Deviation","18–19",0,"SD = √[Σ(x − x̄)² / N]","Keep for the population or use N − 1 for a sample, and say which.","Teachers often ask."],
+["j6","JJ",7,"Pearson r","19–20",1,"“Soil Buddy accuracy will serve as Variable X…biomass.”","X = average perceived-accuracy score per gardener; Y = average growth rate per gardener (composite of height, leaves, diameter, new shoots). N = 30, df = 28, critical r = 0.361 at 0.05. Add an r interpretation table (e.g. 0.00–0.19 negligible … 0.80–1.00 very strong).","Four accuracy and four growth indicators need to become one pair per gardener."],
+["j7","JJ",7,"Ethical Considerations","20–21",0,"Voluntary, consent, confidentiality.","Add: Data Privacy Act of 2012 (RA 10173); optional name; right to withdraw; permission to touch and measure plants; Soil Buddy placed safely, removed after the study; secure storage and disposal of forms.","Covers the device and the plants, not only the survey."],
+["a1","ALL",8,"Cross-read and search the whole file","all",1,"Search: biomass, Chi-square, “Soil Buddy use”, “Soil Buddy usage”, “[town]”, “Political Awareness”.","Each person proofreads another person's section. EL merges and checks page numbers and Figure 1.","One missed leftover is enough to contradict the paper."]
+];
+var P=["Team decisions (do first, together)","Phase 1 – SOP and hypothesis (everything depends on these)","Phase 2 – Chapter 1: Background and Significance","Phase 3 – Chapter 1: Scope, Definition of Terms, Framework","Phase 4 – Chapter 2: Design, Locale, Population, Sample","Phase 5 – Chapter 2: Instruments","Phase 6 – Chapter 2: Data Gathering","Phase 7 – Chapter 2: Statistics and Ethics","Phase 8 – Final check"];
+var S={},f="ALL",db=null,me="";
+try{me=localStorage.getItem("me")||"";S=JSON.parse(localStorage.getItem("tc2")||"{}")}catch(e){}
+var meEl=document.getElementById("me");meEl.value=me;
+meEl.onchange=function(){me=meEl.value;try{localStorage.setItem("me",me)}catch(e){}};
+function lsave(){try{localStorage.setItem("tc2",JSON.stringify(S))}catch(e){}}
+function esc(x){return String(x||"").replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function save(id,o){
+ S[id]=o;lsave();draw();
+ if(db){db.collection("tasks").doc(id).set(o).catch(function(){document.getElementById("sync").textContent="Could not save to the shared list. Check the Firebase rules (see README)."})}
+}
+function chips(){var c=document.getElementById("chips"),h="";["ALL","EL","JJ","JP","KT","MT"].forEach(function(p){h+='<button class="chip'+(f==p?" on":"")+'" data-p="'+p+'">'+(p=="ALL"?"Everyone":p)+"</button>"});c.innerHTML=h}
+function draw(){
+ var h="",ph=-1,d=0,n=0;
+ T.forEach(function(t){
+  if(!((f=="ALL")||t[1]==f||t[1]=="ALL"))return;
+  var s=S[t[0]]||{};n++;if(s.done)d++;
+  if(t[2]!=ph){ph=t[2];h+="<h2>"+P[ph]+"</h2>"}
+  h+='<div class="t'+(s.done?" done":"")+'"><div class="top"><input type="checkbox" data-i="'+t[0]+'"'+(s.done?" checked":"")+'><div><span class="who">'+t[1]+'</span><span class="sec">'+t[3]+'</span><span class="pg"> · p. '+t[4]+'</span>'+(t[5]?'<span class="must">MUST FIX</span>':"")+'</div></div>'+
+  (s.done?'<div class="by">Done by '+esc(s.by||"?")+(s.at?" · "+esc(s.at):"")+'</div>':"")+
+  '<div class="row"><b>Find</b> <span class="find">'+t[6]+'</span></div><div class="row"><b>Change</b> '+t[7]+'</div><div class="row"><b>Why</b> '+t[8]+'</div><input class="note" data-n="'+t[0]+'" placeholder="Note (e.g. page 4 fixed, waiting on KT)" value="'+esc(s.note)+'"></div>';
+ });
+ document.getElementById("list").innerHTML=h;
+ document.getElementById("pb").style.width=(n?d/n*100:0)+"%";
+ document.getElementById("pt").textContent=d+" of "+n+" done"+(f!="ALL"?" ("+f+"'s list, plus team decisions)":"");
+}
+document.addEventListener("click",function(e){var p=e.target.getAttribute&&e.target.getAttribute("data-p");if(p){f=p;chips();draw()}});
+document.addEventListener("change",function(e){
+ var i=e.target.getAttribute("data-i"),nn=e.target.getAttribute("data-n");
+ if(i){var o=S[i]||{};if(e.target.checked&&!me){alert("Pick your initials at the top first.");e.target.checked=false;return}
+  save(i,{done:e.target.checked,by:e.target.checked?me:"",at:e.target.checked?new Date().toLocaleDateString():"",note:o.note||""})}
+ if(nn){var o2=S[nn]||{done:false,by:"",at:""};o2.note=e.target.value;save(nn,o2)}
+});
+chips();draw();
+(async function(){
+ try{db=await getDb()}catch(e){db=null}
+ var sy=document.getElementById("sync");
+ if(!db){sy.textContent="Not connected to Firebase yet: ticks are saved on this device only (see README).";return}
+ sy.textContent="Live: shared with the team";
+ db.collection("tasks").onSnapshot(function(snap){
+  var a=document.activeElement;if(a&&a.getAttribute&&a.getAttribute("data-n"))return;
+  var m={};snap.docs.forEach(function(x){m[x.id]=x.data()});S=m;lsave();draw();
+ },function(){sy.textContent="Live sync problem. Reload the page."});
+})();
+</script></main></body></html>
